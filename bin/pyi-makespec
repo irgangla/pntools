@@ -1,0 +1,10 @@
+#!/home/thomas/Dokumente/Projekt/pntools/bin/python3
+# EASY-INSTALL-ENTRY-SCRIPT: 'PyInstaller===3.0dev-3aebf73','console_scripts','pyi-makespec'
+__requires__ = 'PyInstaller===3.0dev-3aebf73'
+import sys
+from pkg_resources import load_entry_point
+
+if __name__ == '__main__':
+    sys.exit(
+        load_entry_point('PyInstaller===3.0dev-3aebf73', 'console_scripts', 'pyi-makespec')()
+    )
