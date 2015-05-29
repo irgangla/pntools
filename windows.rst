@@ -13,6 +13,10 @@
 * Download PyQt5: http://www.riverbankcomputing.com/software/pyqt/download5
 * Download Qt5:  http://qt.io/download
 * Install Qt5
+* Copy PyQt5 and SIP to c:\venv\
+* Download MinGW
 
-
+* Install SIP:
+  - cd c:\venv\sip-...
+  
 
