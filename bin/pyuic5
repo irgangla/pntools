@@ -1,2 +1,0 @@
-#!/bin/sh
-exec /home/thomas/Dokumente/Projekt/pntools/bin/python -m PyQt5.uic.pyuic ${1+"$@"}

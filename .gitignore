@@ -1,3 +1,9 @@
+#Virtualenv
+.Pyhton
+bin
+lib
+include
+
 # Compiled python modules.
 .pyc
 
