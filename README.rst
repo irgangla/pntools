@@ -23,6 +23,10 @@ for .pnml-files. (http://www.pnml.org/)
 This module implements a GUI for viewing labeled partial 
 orders. This GUI is build with Tkinter.
 
+* petrinet_viewer_tk.py:
+This module implements a GUI for viewing Petri nets. This GUI
+is build with Tkinter.
+
 * lpo_viewer.py:
 This module implements a GUI for viewing labeled partial
 orders. This GUI uses PyQt5!
