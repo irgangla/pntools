@@ -3,6 +3,7 @@
 bin
 lib
 include
+share/sip
 
 # Compiled python modules.
 .pyc
