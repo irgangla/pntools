@@ -3,37 +3,50 @@
 
 """ This program implements a viewer for the LPO data structure.
 
+A LPO is a partial ordered set of events. If two events are ordered
+this order is represented by an arrow. If there is an arrow form an
+event a to an event b this means event b occurs after event a.
+
+Usage: python lpo_viewer.py [<lpo-file>]
 """
 
-import sys
-import math
+import math # calculation of intersection point (fabs, ...)
+import sys # sys.argv
+import partialorder # LPO parser and data structure
+import os # demo file
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QAction, qApp, QFileDialog, QTabWidget
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QPainter, QColor, QPen, QFont
-import partialorder
 
 class LpoWidget(QWidget):
+    """ This class implements a LPO widget.
 
+    This class use a canvas to draw the Hasse diagram of a LPO.
+    """
+    
     def __init__(self):
+        """ This method creates a new, empty LpoView. """
         super().__init__()
-        self.initUI()
+        self.__initUI()
         
-        self.lpo = None
+        self.__lpo = None
 
-    def initUI(self):
+    def __initUI(self):
+        """ Set up user interface. """
         self.setMinimumSize(100, 100)
 
     def showLpo(self, lpo_to_show):
-        print("Show lpo", lpo_to_show.name)
-        self.lpo = lpo_to_show
+        """ This method show the given LPO in this LpoView. """
+        self.__lpo = lpo_to_show
         self.updateSize()
         self.repaint()
         self.setToolTip(lpo_to_show.name)
 
     def updateSize(self):
+        """ Update the size of the widget to fit the size of the LPO. """
         size = [50, 50]
         
-        for id, event in self.lpo.events.items():
+        for id, event in self.__lpo.events.items():
             if event.position[0] > size[0]:
                 size[0] = event.position[0]
             if event.position[1] > size[1]:
@@ -45,19 +58,21 @@ class LpoWidget(QWidget):
     def paintEvent(self, e):
         qp = QPainter()
         qp.begin(self)
-        if self.lpo != None:
-            self.drawLpo(qp)
+        if self.__lpo != None:
+            self.__drawLpo(qp)
         qp.end()
 
-    def drawLpo(self, qp):
-        for arc in self.lpo.arcs:
+    def __drawLpo(self, qp):
+        """ Draw LPO. """
+        for arc in self.__lpo.arcs:
             if arc.user_drawn == True:
-                self.drawArc(qp, arc)
+                self.__drawArc(qp, arc)
 
-        for id, event in self.lpo.events.items():
-            self.drawEvent(qp, event)
+        for id, event in self.__lpo.events.items():
+            self.__drawEvent(qp, event)
 
-    def setEventPen(self, qp):
+    def __setEventPen(self, qp):
+        """ Set up painter for drawing events. """
         qp.setPen(QPen(QColor(0, 0, 0), 2, Qt.SolidLine))
         qp.setBrush(QColor(180, 180, 180))
 
@@ -66,8 +81,9 @@ class LpoWidget(QWidget):
         
         qp.setRenderHint(QPainter.HighQualityAntialiasing)
 
-    def drawEvent(self, qp, event):
-        self.setEventPen(qp)
+    def __drawEvent(self, qp, event):
+        """ Draw the given event. """
+        self.__setEventPen(qp)
         
         qp.drawRect(event.position[0] - 10, event.position[1] - 10, 20, 20)
         metrics = qp.fontMetrics()
@@ -75,40 +91,43 @@ class LpoWidget(QWidget):
         fh = metrics.height()
         qp.drawText(event.position[0] - fw / 2, event.position[1] + 12 + fh , event.label)
 
-    def setArcPen(self, qp):
+    def __setArcPen(self, qp):
+        """ Set up painter for drawing arcs. """
         qp.setPen(QPen(QColor(0, 0, 0), 2, Qt.SolidLine))
         
         qp.setRenderHint(QPainter.HighQualityAntialiasing)
 
-    def setTipPen(self, qp):
+    def __setTipPen(self, qp):
+        """ Set up painter for drawing arc tips. """
         qp.setPen(QPen(QColor(0, 0, 0), 1, Qt.SolidLine))
         qp.setBrush(QColor(0, 0, 0))
 
         qp.setRenderHint(QPainter.HighQualityAntialiasing)
 
-    def drawArc(self, qp, arc):
-        self.setArcPen(qp)
+    def __drawArc(self, qp, arc):
+        """ Draw the given arc. """
+        self.__setArcPen(qp)
         
-        start_event = self.lpo.events[arc.source]
-        end_event = self.lpo.events[arc.target]
+        start_event = self.__lpo.events[arc.source]
+        end_event = self.__lpo.events[arc.target]
 
-        intersections = self.calculateIntersections(start_event, end_event)
+        intersections = self.__calculateIntersections(start_event, end_event)
 
         start = start_event.position[0] + intersections[0][0], start_event.position[1] + intersections[0][1]
         end = end_event.position[0] + intersections[1][0], end_event.position[1] + intersections[1][1]
         
         qp.drawLine(start[0], start[1], end[0], end[1])
 
-        tip = self.calculateTip(start_event, end_event)
+        tip = self.__calculateTip(start_event, end_event)
 
-        self.setTipPen(qp)
+        self.__setTipPen(qp)
        
         qp.drawPolygon(QPoint(end[0], end[1]),
                        QPoint(end[0] + tip[0][0], end[1] + tip[0][1]),
                        QPoint(end[0] + tip[1][0], end[1] + tip[1][1]))
 
 
-    def calculateTip(self, start, end):
+    def __calculateTip(self, start, end):
         vector = float(start.position[0] - end.position[0]), float(start.position[1] - end.position[1])
         vector_length = math.sqrt(vector[0] ** 2 + vector[1] ** 2)
         vector_sized = vector[0] * 10 / vector_length, vector[1] * 10 / vector_length
@@ -129,53 +148,74 @@ class LpoWidget(QWidget):
 
         return tip1, tip2
 
-    def calculateIntersections(self, start, end):
-        vector = float(end.position[0] - start.position[0]), float(end.position[1] - start.position[1])
+    def __calculateIntersections(self, start, end):
+        """ Calculate intersection point of start and end events with the arc.
 
-        fact = 10 / math.fabs(vector[0])
+        This method calculates two vectors which describe the intersection point of the arc from the
+        given start event to the given end event.
+        """
+
+        # vector from the center of the start event to the center of the end event
+        vector = float(end.position[0] - start.position[0]), float(end.position[1] - start.position[1])
+        #calculate a factor to scale the x-component to 10px (half of side length)
+        fact = 1
+        if vector[0] != 0:
+            fact = 10 / math.fabs(vector[0])
+        # scale the vector
         start_vector = vector[0] * fact, vector[1] * fact
-        if start_vector[1] > 10:
+
+        # if y-component of vector is larger than 10px or x-component is 0, scale with y-component
+        if start_vector[1] > 10 or vector[0] == 0:
             fact = 10 / math.fabs(vector[1])
             start_vector = vector[0] * fact, vector[1] * fact
+        #calculate intersection for arc end
+        if vector[0] != 0:
+            fact = 10 / math.fabs(vector[0])
 
-        fact = 10 / math.fabs(vector[0])
         end_vector = -vector[0] * fact, -vector[1] * fact
-        if end_vector[1] > 10:
+
+        if end_vector[1] > 10 or vector[0] == 0:
             fact = 10 / math.fabs(vector[1])
             end_vector = -vector[0] * fact, -vector[1] * fact
 
         return start_vector, end_vector
         
 class LpoViewer(QMainWindow):
+    """ This class implements the window of the Lpo viewer.
 
+    This class implements a menu and tab management for the LpoView.
+    """
+    
     def __init__(self):
+        """ Create new window. """
         super().__init__()
-        self.initUI()
+        self.__initUI()
 
-    def initUI(self):
+    def __initUI(self):
+        """ Set up UI. """
         openAction = QAction('&Open', self)
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Load LPO from XML file')
-        openAction.triggered.connect(self.openLpo)
+        openAction.triggered.connect(self.__onOpen)
 
         closeAction = QAction('&Close', self)
         closeAction.setShortcut('Ctrl+C')
         closeAction.setStatusTip('Close selected tab')
-        closeAction.triggered.connect(self.closeLpo)
+        closeAction.triggered.connect(self.__onClose)
         
         exitAction = QAction('&Exit', self)
         exitAction.setShortcut('Ctrl+X')
         exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(self.closeApp)
-                
+        exitAction.triggered.connect(self.__onQuit)
+        
         menubar = self.menuBar()
         filemenu = menubar.addMenu('&File')
         filemenu.addAction(openAction)
         filemenu.addAction(closeAction)
         filemenu.addAction(exitAction)
 
-        self.tabs = QTabWidget()
-        self.setCentralWidget(self.tabs)
+        self.__tabs = QTabWidget()
+        self.setCentralWidget(self.__tabs)
         
         self.statusBar()
                 
@@ -183,28 +223,33 @@ class LpoViewer(QMainWindow):
         self.setWindowTitle("Lpo Viewer")
         self.show()
 
-    def showLpo(self, lpo):
-        view = LpoWidget()
+    def openLpo(self, file):
+        """ This method shows the LPO contained in the given file as new tab. """
+        lpos = partialorder.parse_lpo_file(file)
+        self.showLpo(lpos[0])
 
-        index = self.tabs.addTab(view, lpo.name)
-        self.tabs.setCurrentIndex(index)
+
+    def showLpo(self, lpo):
+        """ Show the given LPO in a new tab. """
+        view = LpoWidget()
+        
+        index = self.__tabs.addTab(view, lpo.name)
+        self.__tabs.setCurrentIndex(index)
         
         view.showLpo(lpo)
         
         self.statusBar().showMessage(lpo.name)
 
-    def closeLpo(self):
+    def __onClose(self):
         index = self.tabs.currentIndex()
         self.tabs.removeTab(index)
 
-    def openLpo(self):
+    def __onOpen(self):
         fname = QFileDialog.getOpenFileName(self, 'Open LPO')
-        print("Open LPO", fname[0])
         parsed_lpos = lpoparser.parse_lpo_file(fname[0])
-        print(parsed_lpos[0])
         self.showLpo(parsed_lpos[0])        
 
-    def closeApp(self):
+    def __onQuit(self):
         self.hide()
         qApp.quit()
         sys.exit(0)
@@ -212,13 +257,14 @@ class LpoViewer(QMainWindow):
         
 
 if __name__ == "__main__":
-    lpos = partialorder.parse_lpo_file(sys.argv[1])
-    print(lpos[0])
-        
     app = QApplication(sys.argv)
-    
     viewer = LpoViewer()
-    viewer.showLpo(lpos[0])
+
+    if len(sys.argv) > 1: # load LPO if file is given as parameter
+        viewer.openLpo(sys.argv[1])
+
+    if os.path.exists("../abcabc.lpo"): # debug/demo file
+        viewer.openLpo("../abcabc.lpo")
 
     sys.exit(app.exec_())
 
