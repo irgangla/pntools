@@ -105,7 +105,7 @@ class LpoView(Frame):
         start_vector = vector[0] * fact, vector[1] * fact
 
         # if y-component of vector is larger than 10px or x-component is 0, scale with y-component
-        if start_vector[1] > 10 or vector[0] == 0:
+        if math.fabs(start_vector[1]) > 10 or vector[0] == 0:
             fact = 10 / math.fabs(vector[1])
             start_vector = vector[0] * fact, vector[1] * fact
         #calculate intersection for arc end
@@ -114,7 +114,7 @@ class LpoView(Frame):
 
         end_vector = -vector[0] * fact, -vector[1] * fact
 
-        if end_vector[1] > 10 or vector[0] == 0:
+        if math.fabs(end_vector[1]) > 10 or vector[0] == 0:
             fact = 10 / math.fabs(vector[1])
             end_vector = -vector[0] * fact, -vector[1] * fact
 
