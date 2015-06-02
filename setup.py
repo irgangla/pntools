@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name = 'pntools',
-      version = '0.2.0',
+      version = '0.3.0',
       description = 'Petri net and labelled partial order tools',
       long_description = readme(),
       classifiers = [
