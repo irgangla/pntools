@@ -25,6 +25,8 @@ class PetriNet:
     """
     
     def __init__(self):
+        #generate a unique id
+        self.id = ("PetriNet" + str(time.time())) + str(randint(0, 1000))
         self.edges = [] # List or arcs
         self.transitions = {} # Map of transitions. Key: transition id, Value: event
         self.places = {} # Map of places. Key: place id, Value: place
@@ -206,6 +208,7 @@ def parse_pnml_file(file):
         net = PetriNet()
         nets.append(net)
         net.name = net_node.find('./name/text').text
+        net.id = net_node.get('id')
 
         # and parse transitions
         for transition_node in net_node.iter('transition'):
@@ -246,12 +249,68 @@ def parse_pnml_file(file):
     
     return nets
 
+def write_pnml_file(n, filename, relative_offset=True):
+    pnml = ET.Element('pnml')
+    net = ET.SubElement(pnml, 'net', id=n.id)
+    net_name = ET.SubElement(net, 'name')
+    net_name_text = ET.SubElement(net_name, 'text')
+    net_name_text.text = n.name
+
+    page = ET.SubElement(net, 'page', id='1')
+
+    for id, t in n.transitions.items():
+        transition = ET.SubElement(page, 'transition', id=t.id)
+        transition_name = ET.SubElement(transition, 'name')
+        transition_name_text = ET.SubElement(transition_name, 'text')
+        transition_name_text.text = t.label
+        transition_name_graphics = ET.SubElement(transition_name, 'graphics')
+        transition_name_graphics_offset = ET.SubElement(transition_name_graphics, 'offset')
+        transition_name_graphics_offset.attrib['x'] = str(t.offset[0])
+        transition_name_graphics_offset.attrib['y'] = str(t.offset[1])
+        transition_graphics = ET.SubElement(transition, 'graphics')
+        transition_graphics_position = ET.SubElement(transition_graphics, 'position')
+        transition_graphics_position.attrib['x'] = str(t.position[0])
+        transition_graphics_position.attrib['y'] = str(t.position[1])
+
+    for id, p in n.places.items():
+        place = ET.SubElement(page, 'place', id=p.id)
+        place_name = ET.SubElement(place, 'name')
+        place_name_text = ET.SubElement(place_name, 'text')
+        place_name_text.text = p.label
+        place_name_graphics = ET.SubElement(place_name, 'graphics')
+        place_name_graphics_offset = ET.SubElement(place_name_graphics, 'offset')
+        place_name_graphics_offset.attrib['x'] = str(p.offset[0])
+        place_name_graphics_offset.attrib['y'] = str(p.offset[1])
+        place_name_graphics_offset.attrib['x'] = str(p.offset[0])
+        place_name_graphics_offset.attrib['y'] = str(p.offset[1])
+        place_graphics = ET.SubElement(place, 'graphics')
+        place_graphics_position = ET.SubElement(place_graphics, 'position')
+        place_graphics_position.attrib['x'] = str(p.position[0])
+        place_graphics_position.attrib['y'] = str(p.position[1])
+        place_initialMarking = ET.SubElement(place, 'initialMarking')
+        place_initialMarking_text = ET.SubElement(place_initialMarking, 'text')
+        place_initialMarking_text.text = str(p.marking)
+
+    for e in n.edges:
+        edge = ET.SubElement(page, 'arc', id=e.id, source=e.source, target=e.target)
+        edge_inscription = ET.SubElement(edge, 'inscription')
+        edge_inscription_text = ET.SubElement(edge_inscription, 'text')
+        edge_inscription_text.text = str(e.inscription)
+
+    tree = ET.ElementTree(element=pnml)
+    tree.write(filename, encoding="utf-8", xml_declaration=True, method="xml")
 
 if __name__ == "__main__":
-    nets = parse_pnml_file(sys.argv[1])
+    if len(sys.argv) > 1:
+        nets = parse_pnml_file(sys.argv[1])
+        
+        for net in nets:
+            print(net)
 
-    for net in nets:
-        print(net)
+nets = parse_pnml_file("../example.pnml")
+write_pnml_file(nets[0], "../ex.pnml")
+parse_pnml_file("../ex.pnml")
+
 
 
 

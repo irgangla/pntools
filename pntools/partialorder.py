@@ -24,6 +24,7 @@ class LPO:
     """
     
     def __init__(self):
+        self.id = ("Lpo" + str(time.time())) + str(randint(0, 1000)) # generate a unique id
         self.arcs = [] # List or arcs (arcs order events)
         self.events = {} # Map of events. Key: event id, Value: event
 
@@ -61,7 +62,7 @@ class Event:
     
     def __init__(self):
         self.label = "Event" # default label of event
-        #generate a unique id
+        # generate a unique id
         self.id = ("Event" + str(time.time())) + str(randint(0, 1000))
         self.offset = [0, 0]
         self.position = [0, 0]
@@ -142,6 +143,7 @@ def parse_lpo_file(file):
         # create LPO object
         lpo = LPO()
         lpos.append(lpo)
+        lpo.id = lpo_node.get('id')
         lpo.name = lpo_node.find('./name/value').text
 
         # and parse events
@@ -172,11 +174,45 @@ def parse_lpo_file(file):
     
     return lpos
 
+def write_lpo_file(l, filename):
+    pnml = ET.Element('pnml')
+    lpo = ET.SubElement(pnml, 'lpo', id=l.id)
+    lpo_name = ET.SubElement(lpo, 'name')
+    lpo_name_value = ET.SubElement(lpo_name, 'value')
+    lpo_name_value.text = l.name
+
+    for id, e in l.events.items():
+        event = ET.SubElement(lpo, 'event', id=e.id)
+        event_name = ET.SubElement(event, 'name')
+        event_name_value = ET.SubElement(event_name, 'value')
+        event_name_value.text = e.label
+        event_name_graphics = ET.SubElement(event_name, 'graphics')
+        event_name_graphics_offset = ET.SubElement(event_name_graphics, 'offset')
+        event_name_graphics_offset.attrib['x'] = str(e.offset[0])
+        event_name_graphics_offset.attrib['y'] = str(e.offset[1])
+        event_graphics = ET.SubElement(event, 'graphics')
+        event_graphics_position = ET.SubElement(event_graphics, 'position')
+        event_graphics_position.attrib['x'] = str(e.position[0])
+        event_graphics_position.attrib['y'] = str(e.position[1])
+
+    for a in l.arcs:
+        arc = ET.SubElement(lpo, 'lpoArc', id=a.id, source=a.source, target=a.target)
+        arc_graphics = ET.SubElement(arc, 'graphics')
+        if a.user_drawn:
+            arc_graphics.attrib['userDrawn'] = "true"
+        else:
+            arc_graphics.attrib['userDrawn'] = "false"
+
+    tree = ET.ElementTree(element=pnml)
+    tree.write(filename, encoding="utf-8", xml_declaration=True, method="xml")
+
 
 if __name__ == "__main__":
-    lpos = parse_lpo_file(sys.argv[1])
     
-    for lpo in lpos:
-        print(lpo)
+    if len(sys.argv) > 1:
+        lpos = parse_lpo_file(sys.argv[1])
+
+        for lpo in lpos:
+            print(lpo)
 
 
