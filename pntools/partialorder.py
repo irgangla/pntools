@@ -94,6 +94,7 @@ class Arc:
         self.source = None # id of the source event of this arc
         self.target = None # id of the target event of this arc
         self.user_drawn = False # True if the edge was defined from the user
+        self.skeleton = False # True if the arc is a skeleton arc
         self.lpo = None # Reference to LPO object for label resolution of source an target
 
     def __str__(self):

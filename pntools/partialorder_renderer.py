@@ -4,7 +4,7 @@
 """ This program implements a renderer for LPO files. """
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter # Python image library (Pillow)
-import partialorder # LPO data structure
+from pntools import partialorder # LPO data structure
 import math
 import sys
 import os
@@ -168,7 +168,7 @@ def calculate_intersection_event(vector, halfside):
 
     return intersection_vector[0], intersection_vector[1]
 
-def draw_lpo(lpo):
+def draw_lpo(lpo, skeleton=False, transitive=False, skeleton_color=(0,0,255), transitive_color=(220, 220, 220)):
     """ This method renders the given labelled partial order as an Image object. """
     size, off = calculate_size(lpo)
     doffset = -off[0], -off[1]
@@ -176,9 +176,19 @@ def draw_lpo(lpo):
     image = create_image((w * 4, h * 4))
     d = ImageDraw.Draw(image)
 
+    if transitive:
+        for arc in lpo.arcs:
+            if not arc.user_drawn and not arc.skeleton:
+                draw_arc(arc, d, doffset, transitive_color)
+
     for arc in lpo.arcs:
         if arc.user_drawn:
             draw_arc(arc, d, doffset, (0, 0, 0))
+
+    if skeleton:
+        for arc in lpo.arcs:
+            if arc.skeleton:
+                draw_arc(arc, d, doffset, skeleton_color)
             
     for id, event in lpo.events.items():
         draw_event(event, d, doffset)
