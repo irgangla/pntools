@@ -307,10 +307,6 @@ if __name__ == "__main__":
         for net in nets:
             print(net)
 
-nets = parse_pnml_file("../example.pnml")
-write_pnml_file(nets[0], "../ex.pnml")
-parse_pnml_file("../ex.pnml")
-
 
 
 

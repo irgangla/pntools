@@ -6,7 +6,7 @@ include
 share/sip
 
 # Compiled python modules.
-.pyc
+*.pyc
 *__pycache*
 
 # Setuptools distribution folder.

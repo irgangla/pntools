@@ -1,52 +1,44 @@
 from pntools import partialorder
 
 def skeleton(lpo):
-    minimal = minimal_event_ids(lpo)
-    incidence = incidence(lpo)
+    incidence = incidence_matrix(lpo)
 
     for arc in lpo.arcs:
-        if arc.source in minimal:
+        if is_a_skeleton_arc(incidence, arc):
             arc.skeleton = True
         else:
             arc.skeleton = False
 
-    
-
-def preset(lpo, event_id, incidence):
+def is_a_skeleton_arc(incidence, arc):
     matrix, events = incidence
-    index = events.index(event_id)
-    len = len(events)
+    source = events.index(arc.source)
+    target = events.index(arc.target)
 
-    preset = set()
+    for i in range(0, len(events)):
+        if i != source and matrix[i][target] == 1:
+            if is_path_to(incidence, source, i):
+                return False
 
-    for i in range(0, len):
-        matrix[i][event_id] == 1:
-            preset.append(events[i])
+    return True
 
-    return preset
+def is_path_to(incidence, index_to_find, index_to_start):
+    matrix, events = incidence
+    
+    for i in range(0, len(events)):
+        if matrix[i][index_to_start] == 1:
+            if i == index_to_find:
+                return True
 
+    for i in range(0, len(events)):
+        if matrix[i][index_to_start] == 1:
+            if is_path_to(incidence, index_to_find, i):
+                return True
 
+    return False
 
     
-    
-
-
-    
-        
-def minimal_event_ids(lpo):
-    event_ids = set()
-    arc_target_ids = set()
-    
-    for id, event in lpo.events.items():
-        event_ids.add(id)
-
-    for arc in lpo.arcs:
-        arc_target_ids.add(arc.target)
-
-    return event_ids - arc_target_ids
-
-def incidence(lpo):
-    event_ids = tuple(lpos[0].events.keys())
+def incidence_matrix(lpo):
+    event_ids = tuple(lpo.events.keys())
 
     incidence = []
     for id in event_ids:
@@ -62,17 +54,8 @@ def incidence(lpo):
             incidence[source][target] = 1
 
     return incidence, event_ids
-    
-        
-    
 
-lpos = partialorder.parse_lpo_file("../../abcabc.lpo")
-lpo = lpos[0]
 
-skeleton(lpo)
-
-for arc in lpo.arcs:
-    print(arc.source, " --> ", arc.target, " - ", str(arc.skeleton))
 
 
 
