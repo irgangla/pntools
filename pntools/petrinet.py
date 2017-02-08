@@ -114,6 +114,7 @@ class Edge:
     edge.id: Unique ID of this edge.
     edge.source: ID of the source (start) node of this edge.
     edge.target: ID of the target (end) node of this edge.
+    edge.type: ID of the type of this edge.
     edge.inscription: Inscription of this edge.
       The inscription is usually an integer which is interpreted as weight of this edge.
     edge.net: The Petri net which contains this edge.
@@ -126,6 +127,7 @@ class Edge:
         self.id = ("Arc" + str(time.time())) + str(randint(0, 1000))
         self.source = None # id of the source event of this arc
         self.target = None # id of the target event of this arc
+        self.type = 'normal' # id of the type of this arc
         self.inscription = "1" # inscription of this arc
         self.net = None # Reference to net object for label resolution of source an target
 
@@ -243,6 +245,7 @@ def parse_pnml_file(file):
             edge.id = arc_node.get('id')
             edge.source = arc_node.get('source')
             edge.target = arc_node.get('target')
+            edge.type = arc_node.get('type') or 'normal'
             edge.inscription = int(arc_node.find('./inscription/text').text)
             
             edge.net = net
@@ -292,7 +295,7 @@ def write_pnml_file(n, filename, relative_offset=True):
         place_initialMarking_text.text = str(p.marking)
 
     for e in n.edges:
-        edge = ET.SubElement(page, 'arc', id=e.id, source=e.source, target=e.target)
+        edge = ET.SubElement(page, 'arc', id=e.id, source=e.source, target=e.target, type=e.type)
         edge_inscription = ET.SubElement(edge, 'inscription')
         edge_inscription_text = ET.SubElement(edge_inscription, 'text')
         edge_inscription_text.text = str(e.inscription)
