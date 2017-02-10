@@ -205,29 +205,31 @@ def parse_pnml_file(file):
 
     nets = [] # list for parsed PetriNet objects
 
-    for net_node in root.iter('net'):
+    xmlns = '{http://www.pnml.org/version-2009/grammar/pnml}'
+
+    for net_node in root.iter(xmlns+'net'):
         # create PetriNet object
         net = PetriNet()
         nets.append(net)
         net.id = net_node.get('id')
-        netnmnode = net_node.find('./name/text')
+        netnmnode = net_node.find('./'+xmlns+'name/'+xmlns+'text')
         if netnmnode is not None:
              net.name = netnmnode.text
         else:
              net.name = net.id
 
         # and parse transitions
-        for transition_node in net_node.iter('transition'):
+        for transition_node in net_node.iter(xmlns+'transition'):
             transition = Transition()
             transition.id = transition_node.get('id')
             trname = transition_node.find('./name/text')
             if trname is not None:
                 transition.label = trname.text
-	        off_node = transition_node.find('./name/graphics/offset')
+	        off_node = transition_node.find('./'+xmlns+'name/'+xmlns+'graphics/'+xmlns+'offset')
 	        transition.offset = [int(off_node.get('x')), int(off_node.get('y'))]
             else:
                 transition.label = transition.id
-	    position_node = transition_node.find('./graphics/position')
+	    position_node = transition_node.find('./'+xmlns+'graphics/'+xmlns+'position')
             if position_node is not None:
 	        transition.position = [int(position_node.get('x')), int(position_node.get('y'))]
             else:
@@ -236,22 +238,22 @@ def parse_pnml_file(file):
             net.transitions[transition.id] = transition
 
         # and parse places
-        for place_node in net_node.iter('place'):
+        for place_node in net_node.iter(xmlns+'place'):
             place = Place()
             place.id = place_node.get('id')
-            placelabnode = place_node.find('./name/text')
+            placelabnode = place_node.find('./'+xmlns+'name/'+xmlns+'text')
             if placelabnode is not None:
                 place.label = placelabnode.text
-                off_node = place_node.find('./name/graphics/offset')
+                off_node = place_node.find('./'+xmlns+'name/'+xmlns+'graphics/'+xmlns+'offset')
                 place.offset = [int(off_node.get('x')), int(off_node.get('y'))]
             else:
                 place.label = place.id
-            position_node = place_node.find('./graphics/position')
+            position_node = place_node.find('./'+xmlns+'graphics/'+xmlns+'position')
             if position_node is not None:
                 place.position = [int(position_node.get('x')), int(position_node.get('y'))]
             else:
                 place.position = None
-	    plcmarknode = place_node.find('./initialMarking/text')
+	    plcmarknode = place_node.find('./'+xmlns+'initialMarking/'+xmlns+'text')
             if plcmarknode is not None:
                 place.marking = int(plcmarknode.text)
             else:
@@ -260,7 +262,7 @@ def parse_pnml_file(file):
             net.places[place.id] = place
 
         # and arcs
-        for arc_node in net_node.iter('arc'):
+        for arc_node in net_node.iter(xmlns+'arc'):
             edge = Edge()
             net.edges.append(edge)
 
@@ -274,7 +276,7 @@ def parse_pnml_file(file):
                     edge.type = etp.get('value')
                 if edge.type is None:
                     edge.type = 'normal'
-            inscr_txt = arc_node.find('./inscription/text')
+            inscr_txt = arc_node.find('./'+xmlns+'inscription/'+xmlns+'text')
             if inscr_txt is not None:
                 edge.inscription = inscr_txt.text
             else:
