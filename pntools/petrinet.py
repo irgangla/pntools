@@ -267,7 +267,13 @@ def parse_pnml_file(file):
             edge.id = arc_node.get('id')
             edge.source = arc_node.get('source')
             edge.target = arc_node.get('target')
-            edge.type = arc_node.get('type') or 'normal'
+            edge.type = arc_node.get('type')
+            if edge.type is None:
+                etp = arc_node.find('./type')
+                if etp is not None:
+                    edge.type = etp.get('value')
+                if edge.type is None:
+                    edge.type = 'normal'
             inscr_txt = arc_node.find('./inscription/text')
             if inscr_txt is not None:
                 edge.inscription = inscr_txt.text
