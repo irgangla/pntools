@@ -271,7 +271,7 @@ def parse_pnml_file(file):
             edge.target = arc_node.get('target')
             edge.type = arc_node.get('type')
             if edge.type is None:
-                etp = arc_node.find('./type')
+                etp = arc_node.find('./'+xmlns+'type')
                 if etp is not None:
                     edge.type = etp.get('value')
                 if edge.type is None:
@@ -280,7 +280,7 @@ def parse_pnml_file(file):
             if inscr_txt is not None:
                 edge.inscription = inscr_txt.text
             else:
-                edge.inscription = None
+                edge.inscription = "1"
             
             edge.net = net
     
