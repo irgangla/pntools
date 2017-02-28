@@ -114,6 +114,7 @@ class Edge:
     edge.id: Unique ID of this edge.
     edge.source: ID of the source (start) node of this edge.
     edge.target: ID of the target (end) node of this edge.
+    edge.type: ID of the type of this edge.
     edge.inscription: Inscription of this edge.
       The inscription is usually an integer which is interpreted as weight of this edge.
     edge.net: The Petri net which contains this edge.
@@ -126,6 +127,7 @@ class Edge:
         self.id = ("Arc" + str(time.time())) + str(randint(0, 1000))
         self.source = None # id of the source event of this arc
         self.target = None # id of the target event of this arc
+        self.type = 'normal' # id of the type of this arc
         self.inscription = "1" # inscription of this arc
         self.net = None # Reference to net object for label resolution of source an target
 
@@ -203,47 +205,82 @@ def parse_pnml_file(file):
 
     nets = [] # list for parsed PetriNet objects
 
-    for net_node in root.iter('net'):
+    xmlns = '{http://www.pnml.org/version-2009/grammar/pnml}'
+
+    for net_node in root.iter(xmlns+'net'):
         # create PetriNet object
         net = PetriNet()
         nets.append(net)
-        net.name = net_node.find('./name/text').text
         net.id = net_node.get('id')
+        netnmnode = net_node.find('./'+xmlns+'name/'+xmlns+'text')
+        if netnmnode is not None:
+             net.name = netnmnode.text
+        else:
+             net.name = net.id
 
         # and parse transitions
-        for transition_node in net_node.iter('transition'):
+        for transition_node in net_node.iter(xmlns+'transition'):
             transition = Transition()
             transition.id = transition_node.get('id')
-            transition.label = transition_node.find('./name/text').text
-            off_node = transition_node.find('./name/graphics/offset')
-            transition.offset = [int(off_node.get('x')), int(off_node.get('y'))]
-            position_node = transition_node.find('./graphics/position')
-            transition.position = [int(position_node.get('x')), int(position_node.get('y'))]
+            trname = transition_node.find('./name/text')
+            if trname is not None:
+                transition.label = trname.text
+	        off_node = transition_node.find('./'+xmlns+'name/'+xmlns+'graphics/'+xmlns+'offset')
+	        transition.offset = [int(off_node.get('x')), int(off_node.get('y'))]
+            else:
+                transition.label = transition.id
+	    position_node = transition_node.find('./'+xmlns+'graphics/'+xmlns+'position')
+            if position_node is not None:
+	        transition.position = [int(position_node.get('x')), int(position_node.get('y'))]
+            else:
+	        transition.position = None
 
             net.transitions[transition.id] = transition
 
         # and parse places
-        for place_node in net_node.iter('place'):
+        for place_node in net_node.iter(xmlns+'place'):
             place = Place()
             place.id = place_node.get('id')
-            place.label = place_node.find('./name/text').text
-            off_node = place_node.find('./name/graphics/offset')
-            place.offset = [int(off_node.get('x')), int(off_node.get('y'))]
-            position_node = place_node.find('./graphics/position')
-            place.position = [int(position_node.get('x')), int(position_node.get('y'))]
-            place.marking = int(place_node.find('./initialMarking/text').text)
+            placelabnode = place_node.find('./'+xmlns+'name/'+xmlns+'text')
+            if placelabnode is not None:
+                place.label = placelabnode.text
+                off_node = place_node.find('./'+xmlns+'name/'+xmlns+'graphics/'+xmlns+'offset')
+                place.offset = [int(off_node.get('x')), int(off_node.get('y'))]
+            else:
+                place.label = place.id
+            position_node = place_node.find('./'+xmlns+'graphics/'+xmlns+'position')
+            if position_node is not None:
+                place.position = [int(position_node.get('x')), int(position_node.get('y'))]
+            else:
+                place.position = None
+	    plcmarknode = place_node.find('./'+xmlns+'initialMarking/'+xmlns+'text')
+            if plcmarknode is not None:
+                place.marking = int(plcmarknode.text)
+            else:
+                place.marking = 0
 
             net.places[place.id] = place
 
         # and arcs
-        for arc_node in net_node.iter('arc'):
+        for arc_node in net_node.iter(xmlns+'arc'):
             edge = Edge()
             net.edges.append(edge)
 
             edge.id = arc_node.get('id')
             edge.source = arc_node.get('source')
             edge.target = arc_node.get('target')
-            edge.inscription = int(arc_node.find('./inscription/text').text)
+            edge.type = arc_node.get('type')
+            if edge.type is None:
+                etp = arc_node.find('./'+xmlns+'type')
+                if etp is not None:
+                    edge.type = etp.get('value')
+                if edge.type is None:
+                    edge.type = 'normal'
+            inscr_txt = arc_node.find('./'+xmlns+'inscription/'+xmlns+'text')
+            if inscr_txt is not None:
+                edge.inscription = inscr_txt.text
+            else:
+                edge.inscription = "1"
             
             edge.net = net
     
@@ -269,8 +306,8 @@ def write_pnml_file(n, filename, relative_offset=True):
         transition_name_graphics_offset.attrib['y'] = str(t.offset[1])
         transition_graphics = ET.SubElement(transition, 'graphics')
         transition_graphics_position = ET.SubElement(transition_graphics, 'position')
-        transition_graphics_position.attrib['x'] = str(t.position[0])
-        transition_graphics_position.attrib['y'] = str(t.position[1])
+        transition_graphics_position.attrib['x'] = str(t.position[0] if t.position is not None else 0)
+        transition_graphics_position.attrib['y'] = str(t.position[1] if t.position is not None else 0)
 
     for id, p in n.places.items():
         place = ET.SubElement(page, 'place', id=p.id)
@@ -279,20 +316,20 @@ def write_pnml_file(n, filename, relative_offset=True):
         place_name_text.text = p.label
         place_name_graphics = ET.SubElement(place_name, 'graphics')
         place_name_graphics_offset = ET.SubElement(place_name_graphics, 'offset')
-        place_name_graphics_offset.attrib['x'] = str(p.offset[0])
-        place_name_graphics_offset.attrib['y'] = str(p.offset[1])
-        place_name_graphics_offset.attrib['x'] = str(p.offset[0])
-        place_name_graphics_offset.attrib['y'] = str(p.offset[1])
+        place_name_graphics_offset.attrib['x'] = str(p.offset[0] if p.offset is not None else 0)
+        place_name_graphics_offset.attrib['y'] = str(p.offset[1] if p.offset is not None else 0)
+        place_name_graphics_offset.attrib['x'] = str(p.offset[0] if p.offset is not None else 0)
+        place_name_graphics_offset.attrib['y'] = str(p.offset[1] if p.offset is not None else 0)
         place_graphics = ET.SubElement(place, 'graphics')
         place_graphics_position = ET.SubElement(place_graphics, 'position')
-        place_graphics_position.attrib['x'] = str(p.position[0])
-        place_graphics_position.attrib['y'] = str(p.position[1])
+        place_graphics_position.attrib['x'] = str(p.position[0] if p.position is not None else 0)
+        place_graphics_position.attrib['y'] = str(p.position[1] if p.position is not None else 0)
         place_initialMarking = ET.SubElement(place, 'initialMarking')
         place_initialMarking_text = ET.SubElement(place_initialMarking, 'text')
         place_initialMarking_text.text = str(p.marking)
 
     for e in n.edges:
-        edge = ET.SubElement(page, 'arc', id=e.id, source=e.source, target=e.target)
+        edge = ET.SubElement(page, 'arc', id=e.id, source=e.source, target=e.target, type=e.type)
         edge_inscription = ET.SubElement(edge, 'inscription')
         edge_inscription_text = ET.SubElement(edge_inscription, 'text')
         edge_inscription_text.text = str(e.inscription)
