@@ -205,7 +205,8 @@ def parse_pnml_file(file):
 
     nets = [] # list for parsed PetriNet objects
 
-    xmlns = '{http://www.pnml.org/version-2009/grammar/pnml}'
+    #xmlns = '{http://www.pnml.org/version-2009/grammar/pnml}' not working
+    xmlns = ''
 
     for net_node in root.iter(xmlns+'net'):
         # create PetriNet object
@@ -222,43 +223,32 @@ def parse_pnml_file(file):
         for transition_node in net_node.iter(xmlns+'transition'):
             transition = Transition()
             transition.id = transition_node.get('id')
-            trname = transition_node.find('./name/text')
-            if trname is not None:
-                transition.label = trname.text
-	        off_node = transition_node.find('./'+xmlns+'name/'+xmlns+'graphics/'+xmlns+'offset')
-	        transition.offset = [int(off_node.get('x')), int(off_node.get('y'))]
-            else:
-                transition.label = transition.id
-	    position_node = transition_node.find('./'+xmlns+'graphics/'+xmlns+'position')
-            if position_node is not None:
-	        transition.position = [int(position_node.get('x')), int(position_node.get('y'))]
-            else:
-	        transition.position = None
-
+            transition.label = transition.id if transition_node.find('./name/text')== None else transition_node.find('./name/text').text
+            position_node = transition_node.find('./graphics/position')
+            transition.position = [int(float(position_node.get('x'))), int(float(position_node.get('y')))]
+            off_node = transition_node.find('./'+xmlns+'name/'+xmlns+'graphics/'+xmlns+'offset')
+            if off_node == None :
+                transition.offset = [0,0]
+            else :
+                transition.offset = [int(off_node.get('x')), int(off_node.get('y'))]
             net.transitions[transition.id] = transition
+
 
         # and parse places
         for place_node in net_node.iter(xmlns+'place'):
             place = Place()
             place.id = place_node.get('id')
-            placelabnode = place_node.find('./'+xmlns+'name/'+xmlns+'text')
-            if placelabnode is not None:
-                place.label = placelabnode.text
-                off_node = place_node.find('./'+xmlns+'name/'+xmlns+'graphics/'+xmlns+'offset')
-                place.offset = [int(off_node.get('x')), int(off_node.get('y'))]
-            else:
-                place.label = place.id
+            place.label = place.id if place_node.find('./'+xmlns+'name/'+xmlns+'text')== None else place_node.find('./'+xmlns+'name/'+xmlns+'text').text
             position_node = place_node.find('./'+xmlns+'graphics/'+xmlns+'position')
-            if position_node is not None:
-                place.position = [int(position_node.get('x')), int(position_node.get('y'))]
-            else:
-                place.position = None
-	    plcmarknode = place_node.find('./'+xmlns+'initialMarking/'+xmlns+'text')
-            if plcmarknode is not None:
-                place.marking = int(plcmarknode.text)
-            else:
-                place.marking = 0
+            place.position = [int(float(position_node.get('x'))), int(float(position_node.get('y')))]
 
+            off_node = place_node.find('./'+xmlns+'name/'+xmlns+'graphics/'+xmlns+'offset')
+            if off_node == None :
+                place.offset = [0,0]
+            else :
+                place.offset = [int(off_node.get('x')), int(off_node.get('y'))]
+
+            place.marking = 0 if place_node.find('./initialMarking/text')== None else int(place_node.find('./initialMarking/text').text)
             net.places[place.id] = place
 
         # and arcs

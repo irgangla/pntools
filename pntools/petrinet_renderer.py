@@ -74,7 +74,7 @@ def draw_transition(transition, draw, doffset):
     offset = transition.offset[0] * scale, transition.offset[1] * scale
     
 
-    font = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 12 * scale)
+    font = ImageFont.truetype('./font/Sawasdee.ttf', 12 * scale)
 
     draw.rectangle([x - halfside, y - halfside, x + halfside, y + halfside],
                    fill=(0, 0, 0), outline=(0, 0, 0))
@@ -97,7 +97,7 @@ def draw_place(place, draw, doffset):
     distance = 2 * scale
     offset = place.offset[0] * scale, place.offset[1] * scale
 
-    font = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 12 * scale)
+    font = ImageFont.truetype('./font/Sawasdee.ttf', 12 * scale)
 
     draw.ellipse([x - halfside, y - halfside, x + halfside, y + halfside],
                    fill=(0, 0, 0), outline=(0, 0, 0))
