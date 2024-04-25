@@ -2,7 +2,7 @@
 <pnml>
      <net id="" type="http://www.pnml.org/version-2009/grammar/ptnet">
           <name>
-               <text>Project_PetriNet_Syntehsis1430748661856.pnml</text>
+               <text>Project_PetriNet_Synthesis1430748661856.pnml</text>
           </name>
           <page id="p1-1430748661881">
                <transition id="Node1430748661856716.4453427809592">
